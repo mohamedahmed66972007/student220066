@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "title": "111",
+    "subject": "islamic",
+    "creator": "محمد",
+    "description": null,
+    "questions": [
+      {
+        "question": "1",
+        "options": [
+          "صح",
+          "خطأ"
+        ],
+        "correctAnswer": 0,
+        "type": "truefalse"
+      }
+    ],
+    "code": "UWGIWAEH",
+    "createdAt": "2025-05-31T16:55:53.032Z"
+  }
+]
