@@ -5,8 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription
+  DialogFooter
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -21,24 +20,21 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { X, Upload } from "lucide-react";
 import { subjectOptions, semesterOptions } from "./SubjectIcons";
-import { cloudinaryStorageService } from "@/lib/storage";
-import { FileData } from "@shared/schema";
 
 interface AddFileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onFileUploaded?: () => void;
 }
 
-const AddFileModal: React.FC<AddFileModalProps> = ({ isOpen, onClose, onFileUploaded }) => {
+const AddFileModal: React.FC<AddFileModalProps> = ({ isOpen, onClose }) => {
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
   const [semester, setSemester] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-
+  
+  const { uploadFile, isUploading } = useFiles();
   const { toast } = useToast();
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -52,7 +48,7 @@ const AddFileModal: React.FC<AddFileModalProps> = ({ isOpen, onClose, onFileUplo
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-
+    
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       setFile(e.dataTransfer.files[0]);
     }
@@ -66,46 +62,53 @@ const AddFileModal: React.FC<AddFileModalProps> = ({ isOpen, onClose, onFileUplo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!file || !title.trim() || !subject || !semester) {
+    
+    if (!title || !subject || !semester || !file) {
       toast({
         title: "خطأ",
-        description: "يرجى ملء جميع الحقول واختيار ملف",
+        description: "يرجى ملء جميع الحقول وتحديد ملف",
         variant: "destructive",
       });
       return;
     }
-
-    setIsUploading(true);
-
+    
     try {
-      // Use Cloudinary Storage service directly
-
-      const newFile = await cloudinaryStorageService.uploadFile(file, title, subject, semester);
-
-      toast({
-        title: "نجح الرفع",
-        description: "تم رفع الملف بنجاح",
+      // Make sure we're using the correct subject and semester from the available options
+      const validSubject = subjectOptions.find(option => option.value === subject)?.value || subjectOptions[0].value;
+      const validSemester = semesterOptions.find(option => option.value === semester)?.value || semesterOptions[0].value;
+      
+      console.log("Uploading file with validated data:", {
+        title,
+        subject: validSubject,
+        semester: validSemester,
+        fileName: file.name,
       });
-
-      // Reset form
+      
+      await uploadFile({
+        title,
+        subject: validSubject as any,
+        semester: validSemester as any,
+        fileName: file.name,
+        file,
+      });
+      
+      toast({
+        title: "تم رفع الملف بنجاح",
+      });
+      
+      // Reset form and close modal
       setTitle("");
       setSubject("");
       setSemester("");
       setFile(null);
-      if (onFileUploaded) {
-        onFileUploaded();
-      }
       onClose();
     } catch (error) {
       console.error("Upload error:", error);
       toast({
-        title: "خطأ في الرفع",
-        description: error instanceof Error ? error.message : "حدث خطأ أثناء رفع الملف. يرجى المحاولة مرة أخرى.",
+        title: "خطأ",
+        description: "حدث خطأ أثناء رفع الملف. يرجى المحاولة مرة أخرى.",
         variant: "destructive",
       });
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -114,9 +117,6 @@ const AddFileModal: React.FC<AddFileModalProps> = ({ isOpen, onClose, onFileUplo
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-right">إضافة ملف جديد</DialogTitle>
-          <DialogDescription className="text-right">
-            قم برفع ملف جديد إلى المكتبة
-          </DialogDescription>
           <Button
             onClick={onClose}
             variant="ghost"
@@ -126,7 +126,7 @@ const AddFileModal: React.FC<AddFileModalProps> = ({ isOpen, onClose, onFileUplo
             <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
-
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -144,7 +144,7 @@ const AddFileModal: React.FC<AddFileModalProps> = ({ isOpen, onClose, onFileUplo
                 </SelectContent>
               </Select>
             </div>
-
+            
             <div className="space-y-2">
               <Label htmlFor="semester">الفصل الدراسي</Label>
               <Select value={semester} onValueChange={setSemester} required>
@@ -161,7 +161,7 @@ const AddFileModal: React.FC<AddFileModalProps> = ({ isOpen, onClose, onFileUplo
               </Select>
             </div>
           </div>
-
+          
           <div className="space-y-2">
             <Label htmlFor="title">عنوان الملف</Label>
             <Input
@@ -171,7 +171,7 @@ const AddFileModal: React.FC<AddFileModalProps> = ({ isOpen, onClose, onFileUplo
               required
             />
           </div>
-
+          
           <div className="space-y-2">
             <Label>الملف</Label>
             <div
@@ -200,7 +200,7 @@ const AddFileModal: React.FC<AddFileModalProps> = ({ isOpen, onClose, onFileUplo
               />
             </div>
           </div>
-
+          
           <DialogFooter className="flex justify-end gap-2 mt-6">
             <Button
               type="button"

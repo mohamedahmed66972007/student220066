@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -232,8 +232,49 @@ export default function AddStudySessionModal({ open, onClose, onAdd }: AddStudyS
   };
 
   const checkTimeConflict = (newStartTime: string, newEndTime: string, newDate: Date): boolean => {
-    // This functionality is now handled by Firebase integration
-    // Time conflict checking can be implemented based on Firebase data
+    // Retrieve study sessions from Firebase, specific to the user
+    if (!user) {
+      console.warn("User is not logged in. Cannot check for time conflicts.");
+      return false;
+    }
+  
+    // Retrieve study sessions from Firebase, specific to the user
+    const userStudySessions = JSON.parse(localStorage.getItem('studySessions') || '[]') as StudySession[];
+    const newDateStr = dayjs(newDate).format("YYYY-MM-DD");
+
+    for (const session of userStudySessions) {
+      if (session.status === 'active') {
+        const sessionDate = dayjs(session.startDate).format("YYYY-MM-DD");
+
+        if (sessionDate === newDateStr) {
+          const sessionStart = dayjs(session.startDate).format("HH:mm");
+          const sessionEnd = dayjs(session.endDate).format("HH:mm");
+
+          // Check for time overlap
+          const newStart = dayjs(`${newDateStr} ${newStartTime}`);
+          const newEnd = dayjs(`${newDateStr} ${newEndTime}`);
+          const existingStart = dayjs(`${newDateStr} ${sessionStart}`);
+          const existingEnd = dayjs(`${newDateStr} ${sessionEnd}`);
+
+          if (
+            (newStart >= existingStart && newStart < existingEnd) ||
+            (newEnd > existingStart && newEnd <= existingEnd) ||
+            (newStart <= existingStart && newEnd >= existingEnd)
+          ) {
+            const subjectName = subjectOptions.find(s => s.value === session.subject)?.label || session.subject;
+            const newSubjectName = subjectOptions.find(s => s.value === subject)?.label || subject;
+
+            toast({
+              title: "تعارض في الوقت",
+              description: `مادة ${newSubjectName} تتعارض مع مادة ${subjectName} في نفس الوقت`,
+              variant: "destructive",
+              duration: 5000,
+            });
+            return true;
+          }
+        }
+      }
+    }
     return false;
   };
 
@@ -317,9 +358,6 @@ export default function AddStudySessionModal({ open, onClose, onAdd }: AddStudyS
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto overflow-x-visible">
         <DialogHeader>
           <DialogTitle>إضافة مادة للمذاكرة</DialogTitle>
-          <DialogDescription className="text-right">
-            قم بإضافة مادة جديدة لجدولك
-          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">

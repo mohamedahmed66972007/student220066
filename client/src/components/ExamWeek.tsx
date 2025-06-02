@@ -44,14 +44,9 @@ const ExamWeek: React.FC<ExamWeekProps> = ({ exams, onDelete }) => {
     const minutes = duration.minutes();
     const seconds = duration.seconds();
 
-    // Format time with leading zeros
-    const formatTime = (h: number, m: number, s: number) => {
-      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
-
     if (days > 1) return `باقي ${days} يوم`;
-    if (days === 1) return `باقي يوم و ${formatTime(hours, minutes, seconds)}`;
-    return `باقي ${formatTime(hours, minutes, seconds)}`;
+    if (days === 1) return `باقي يوم و ${hours}:${minutes}:${seconds}`;
+    return `باقي ${hours}:${minutes}:${seconds}`;
   };
 
   useEffect(() => {

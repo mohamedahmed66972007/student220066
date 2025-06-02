@@ -1,95 +1,97 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { cloudinaryStorageService } from "@/lib/storage";
-import { FileData } from "@shared/schema";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { File, InsertFile } from "@shared/schema";
+import { Subject } from "@/components/SubjectIcons";
 
-export function useFiles(subject?: string, semester?: string) {
-  const [files, setFiles] = useState<FileData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+interface FilesFilters {
+  subject?: Subject | "all";
+  semester?: string;
+}
 
-  const fetchFiles = async () => {
+interface FileUpload extends Omit<InsertFile, "filePath"> {
+  file: Blob;
+}
+
+export const useFiles = (filters: FilesFilters = {}) => {
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Construct query parameters
+  const queryParams = new URLSearchParams();
+  if (filters.subject && filters.subject !== "all") queryParams.append("subject", filters.subject);
+  if (filters.semester && filters.semester !== "all") queryParams.append("semester", filters.semester);
+
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : "";
+
+  // Fetch files
+  const { data: files, isLoading, error, refetch } = useQuery<File[]>({
+    queryKey: ["/api/files", filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters.subject && filters.subject !== "all") params.append("subject", filters.subject);
+      if (filters.semester && filters.semester !== "all") params.append("semester", filters.semester);
+      
+      const response = await fetch(`/api/files?${params.toString()}`);
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    },
+    enabled: true,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
+  });
+
+  // Delete file mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/files/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/files"] });
+    },
+  });
+
+  // Upload file
+  const uploadFile = async (fileData: FileUpload): Promise<File> => {
+    setIsUploading(true);
+
     try {
-      setIsLoading(true);
-      setError(null);
+      const formData = new FormData();
+      formData.append("title", fileData.title);
+      formData.append("subject", fileData.subject);
+      formData.append("semester", fileData.semester);
+      formData.append("fileName", fileData.fileName);
+      formData.append("file", fileData.file);
 
-      let filesData: FileData[] = [];
+      const response = await fetch("/api/files", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
 
-      if (subject) {
-        filesData = await cloudinaryStorageService.getFilesBySubject(subject);
-      } else if (semester) {
-        filesData = await cloudinaryStorageService.getFilesBySemester(semester);
-      } else {
-        filesData = await cloudinaryStorageService.getFiles();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Upload error:', errorText);
+        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
       }
 
-      setFiles(filesData);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "حدث خطأ أثناء تحميل الملفات";
-      setError(errorMessage);
-      toast({
-        title: "خطأ",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      const newFile = await response.json();
 
-  const uploadFile = async (file: File, title: string, subject: string, semester: string) => {
-    try {
-      const newFile = await cloudinaryStorageService.uploadFile(file, title, subject, semester);
-      setFiles(prev => [newFile, ...prev]);
-
-      toast({
-        title: "نجح الرفع",
-        description: "تم رفع الملف بنجاح",
-      });
+      // Refetch files after upload
+      queryClient.invalidateQueries({ queryKey: ["/api/files"] });
 
       return newFile;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "فشل في رفع الملف";
-      toast({
-        title: "خطأ",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      throw err;
+    } finally {
+      setIsUploading(false);
     }
   };
-
-  const deleteFile = async (fileId: string, filePath: string) => {
-    try {
-      await cloudinaryStorageService.deleteFile(fileId, filePath);
-      setFiles(prev => prev.filter(file => file.id !== fileId));
-
-      toast({
-        title: "تم الحذف",
-        description: "تم حذف الملف بنجاح",
-      });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "فشل في حذف الملف";
-      toast({
-        title: "خطأ",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      throw err;
-    }
-  };
-
-  useEffect(() => {
-    fetchFiles();
-  }, [subject, semester]);
 
   return {
     files,
     isLoading,
     error,
+    isUploading,
+    refetch,
+    deleteFile: deleteMutation.mutateAsync,
     uploadFile,
-    deleteFile,
-    refetch: fetchFiles
   };
-}
+};

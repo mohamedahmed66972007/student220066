@@ -21,107 +21,20 @@ const FileCard: React.FC<FileCardProps> = ({ file }) => {
   const { isAdmin } = useAuth();
   const { deleteFile } = useFiles();
   const { toast } = useToast();
-
-  const handleViewFile = async () => {
-    try {
-      // Check if the file path is valid
-      if (!file.filePath || file.filePath.trim() === '') {
-        toast({
-          title: "خطأ",
-          description: "رابط الملف غير صالح",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // For Cloudinary URLs, format URL properly
-      if (file.filePath.includes('cloudinary.com')) {
-        // Create proper Cloudinary URL for viewing
-        let viewUrl = file.filePath;
-        
-        // If it's a raw resource, modify URL to allow inline viewing
-        if (viewUrl.includes('/raw/upload/')) {
-          viewUrl = viewUrl.replace('/raw/upload/', '/image/upload/fl_attachment/');
-        } else if (viewUrl.includes('/upload/')) {
-          viewUrl = viewUrl.replace('/upload/', '/upload/fl_attachment/');
-        }
-        
-        window.open(viewUrl, '_blank', 'noopener,noreferrer');
-      } else {
-        // For other URLs, open directly
-        window.open(file.filePath, '_blank', 'noopener,noreferrer');
-      }
-    } catch (error) {
-      console.error('Error opening file:', error);
-      toast({
-        title: "خطأ",
-        description: "فشل في فتح الملف",
-        variant: "destructive",
-      });
-    }
+  
+  const handleViewFile = () => {
+    window.open(file.filePath, "_blank");
   };
-
-  const handleDownloadFile = async () => {
-    try {
-      if (!file.filePath || file.filePath.trim() === '') {
-        toast({
-          title: "خطأ",
-          description: "رابط الملف غير صالح",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Show downloading toast
-      toast({
-        title: "جاري التحميل...",
-        description: "يرجى الانتظار",
-      });
-
-      // For Cloudinary, create proper download URL
-      if (file.filePath.includes('cloudinary.com')) {
-        // Create proper download URL
-        let downloadUrl = file.filePath;
-        
-        // Ensure we use the correct format for download
-        if (downloadUrl.includes('/raw/upload/')) {
-          downloadUrl = downloadUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/');
-        } else if (downloadUrl.includes('/upload/')) {
-          downloadUrl = downloadUrl.replace('/upload/', '/upload/fl_attachment/');
-        }
-        
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = file.fileName;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else {
-        // For other files, use direct link
-        const link = document.createElement('a');
-        link.href = file.filePath;
-        link.download = file.fileName;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-
-      toast({
-        title: "تم التحميل",
-        description: "تم تحميل الملف بنجاح",
-      });
-    } catch (error) {
-      console.error('Download error:', error);
-      toast({
-        title: "خطأ في التحميل",
-        description: "فشل تحميل الملف. يرجى المحاولة مرة أخرى.",
-        variant: "destructive",
-      });
-    }
+  
+  const handleDownloadFile = () => {
+    const a = document.createElement("a");
+    a.href = file.filePath;
+    a.download = file.fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
-
+  
   const handleDeleteFile = async () => {
     try {
       await deleteFile(file.id);
@@ -136,11 +49,11 @@ const FileCard: React.FC<FileCardProps> = ({ file }) => {
       });
     }
   };
-
+  
   const subjectName = getSubjectName(file.subject as any);
   const subjectColor = getSubjectColor(file.subject as any);
   const subjectImage = getSubjectImage(file.subject as any);
-
+  
   return (
     <Card className="file-card overflow-hidden">
       <CardHeader className="p-4">

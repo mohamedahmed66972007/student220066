@@ -1,0 +1,185 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 47.4% 11.2%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 47.4% 11.2%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 47.4% 11.2%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 154 98% 37%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 261 72% 64%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.75rem;
+
+  /* Subject Colors */
+  .arabic-bg { @apply bg-purple-500; }
+  .english-bg { @apply bg-blue-500; }
+  .math-bg { @apply bg-blue-600; }
+  .chemistry-bg { @apply bg-pink-500; }
+  .physics-bg { @apply bg-yellow-500; }
+  .biology-bg { @apply bg-green-500; }
+  .constitution-bg { @apply bg-gray-500; }
+  .islamic-bg { @apply bg-emerald-600; }
+}
+
+.dark {
+  --background: 222.2 47.4% 11.2%;
+  --foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --popover: 222.2 47.4% 11.2%;
+  --popover-foreground: 210 40% 98%;
+  --card: 222.2 47.4% 11.2%;
+  --card-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 154 98% 35%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 261 72% 64%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 224.3 76.3% 48%;
+
+  /* Subject Colors */
+  --arabic-color: 261 72% 80%;
+  --english-color: 205 100% 80%;
+  --math-color: 221 83% 80%;
+  --chemistry-color: 340 82% 80%;
+  --physics-color: 48 100% 80%;
+  --biology-color: 150 100% 80%;
+  --constitution-color: 0 0% 80%;
+  --islamic-color: 123 41% 80%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+    text-align: right;
+  }
+
+  body {
+    @apply bg-background text-foreground font-cairo antialiased overflow-x-hidden min-h-screen;
+  }
+
+  /* Improve text spacing for Arabic */
+  p, h1, h2, h3, h4, h5, h6 {
+    @apply leading-relaxed tracking-normal;
+  }
+
+  /* Fix input alignment */
+  input, textarea {
+    text-align: right;
+  }
+
+  /* Responsive container */
+  .container {
+    @apply px-4 sm:px-6 lg:px-8 w-full mx-auto max-w-7xl;
+  }
+
+  /* Responsive grid system */
+  .grid-cols-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  }
+
+  /* Responsive text */
+  .text-responsive {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+
+  /* Responsive spacing */
+  .spacing-responsive {
+    @apply p-2 sm:p-4 lg:p-6;
+  }
+
+  /* Responsive flex */
+  .flex-responsive {
+    @apply flex flex-col sm:flex-row items-center gap-2 sm:gap-4;
+  }
+}
+
+.font-cairo {
+  font-family: 'Cairo', sans-serif;
+}
+
+/* File card hover effect */
+.file-card {
+  transition: all 0.3s ease;
+}
+
+.file-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.arabic-bg { background-color: hsl(var(--arabic-color)); }
+.english-bg { background-color: hsl(var(--english-color)); }
+.math-bg { background-color: hsl(var(--primary)); }
+.chemistry-bg { background-color: hsl(var(--chemistry-color)); }
+.physics-bg { background-color: hsl(var(--physics-color)); }
+.biology-bg { background-color: hsl(var(--biology-color)); }
+.constitution-bg { background-color: hsl(var(--constitution-color)); }
+.islamic-bg { background-color: hsl(var(--islamic-color)); }
+
+.arabic-text { color: hsl(var(--arabic-color)); }
+.english-text { color: hsl(var(--english-color)); }
+.math-text { color: hsl(var(--primary)); }
+.chemistry-text { color: hsl(var(--chemistry-color)); }
+.physics-text { color: hsl(var(--physics-color)); }
+.biology-text { color: hsl(var(--biology-color)); }
+.constitution-text { color: hsl(var(--constitution-color)); }
+.islamic-text { color: hsl(var(--islamic-color)); }
+
+.arabic-bg-light { background-color: hsl(var(--arabic-color) / 10%); }
+.english-bg-light { background-color: hsl(var(--english-color) / 10%); }
+.math-bg-light { background-color: hsl(var(--primary) / 10%); }
+.chemistry-bg-light { background-color: hsl(var(--chemistry-color) / 10%); }
+.physics-bg-light { background-color: hsl(var(--physics-color) / 10%); }
+.biology-bg-light { background-color: hsl(var(--biology-color) / 10%); }
+.constitution-bg-light { background-color: hsl(var(--constitution-color) / 10%); }
+.islamic-bg-light { background-color: hsl(var(--islamic-color) / 10%); }
